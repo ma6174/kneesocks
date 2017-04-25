@@ -42,7 +42,7 @@ init()
     struct addrinfo hints;
 
     orig_getaddrinfo = dlsym(RTLD_NEXT, "getaddrinfo");
-    orig_gethostbyname = dlsym(RTLD_NEXT, "gethostbyname");
+    /* orig_gethostbyname = dlsym(RTLD_NEXT, "gethostbyname"); */
     orig_connect = dlsym(RTLD_NEXT, "connect");
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -52,6 +52,9 @@ init()
     hints.ai_protocol = 0;
 
     env_debug = getenv("DEBUG");
+    if (env_debug) {
+	    LOG_DEBUG("running\n");
+    }
     env_socks_proxy = getenv("socks_proxy");
     if (env_socks_proxy) {
         tmpbuf = strdup(env_socks_proxy);
@@ -71,14 +74,16 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
 {
     LOG_DEBUG("getaddrinfo: node=%s, service=%s\n", node, service);
     strncpy(saved_node, node, sizeof(saved_node)-1);
-    return (*orig_getaddrinfo)("0.0.0.1", service, hints, res);
+    /* return (*orig_getaddrinfo)("0.0.0.0", service, hints, res); */
+    return (*orig_getaddrinfo)(node, service, hints, res);
 }
 
 struct hostent *gethostbyname(const char *name)
 {
     LOG_DEBUG("gethostbyname: name=%s\n", name);
     strncpy(saved_node, name, sizeof(saved_node)-1);
-    return (*orig_gethostbyname)("0.0.0.1");
+    /* return (*orig_gethostbyname)("0.0.0.0"); */
+    return (*orig_gethostbyname)(name);
 }
 
 int connect_proxy(int sockfd, const struct sockaddr_in *addr, socklen_t addrlen)
